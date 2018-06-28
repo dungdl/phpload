@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible"
+        content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet"
+        type="text/css"
+        href="css/style.css" />
+    <script src="main.js"></script>
+    <script>
+        var file_id;
+        function preview() {
+            input = document.getElementById('chooser');
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    var video = document.getElementById('mdaUpVid');
+                    var source = document.createElement('source');
+
+                    source.setAttribute('src', e.target.result);
+                    source.setAttribute('type', 'video/mp4')
+
+                    video.appendChild(source);
+                    video.play();
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function upload() {
+            var file = document.getElementById('chooser').files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+            $.ajax({
+                url: '/change/upload.php',
+                data: formData,
+                contentType: false,
+                processData: false,
+                type: "POST",
+                success: function (msg) {
+                    console.log(msg);
+                    file_id = msg;
+                }
+            });
+        }
+        function download() {
+            var formData = new FormData();
+            formData.append('file_id', file_id);
+            $.ajax({
+                url: '/change/download.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (msg) {
+                    $('#imgLoad').attr('src', msg);
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="panel">
+        <video id="mdaUpVid"
+            width="320"
+            height="240"
+            controls>
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <div>
+        <input type="file"
+            id="chooser"
+            onchange="preview()">
+    </div>
+    <button id="btnUpload"
+        onclick="upload()">UPLOAD</button>
+    <div id="panel">
+        <video id="mdaUpVid"
+            width="320"
+            height="240"
+            controls> Your browser does not support the video tag.
+        </video>
+    </div>
+    <button id="btnDownload"
+        onclick="download()">DOWNLOAD</button>
+    <div>
+
+    </div>
+</body>
+
+</html>
