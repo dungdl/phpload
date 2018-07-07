@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible"
+        content="IE=edge">
+    <title>Video</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet"
+        type="text/css"
+        href="css/style.css" />
+    <script src="main.js"></script>
+    <script>
+        var file_id;
+        function preview() {
+            var file = document.getElementById('chooser');
+            var $source = $('#uploadSrc');
+            $source[0].src = URL.createObjectURL(file.files[0]);
+            $source.parent()[0].load();
+        }
+        function upload() {
+            var file = document.getElementById('chooser').files[0];
+            if (file) {
+                var formData = new FormData();
+                document.getElementById('btnUpload').disabled = true;
+                formData.append('file', file);
+                $.ajax({
+                    url: '/change/upload.php',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    type: "POST",
+                    success: function (msg) {
+                        console.log(msg);
+                        file_id = msg;
+                        document.getElementById('btnDownload').disabled = false;
+                    }
+                });
+            } else {
+                alert("None file");
+            }
+        }
+        function download() {
+            var formData = new FormData();
+            formData.append('file_id', file_id);
+            $.ajax({
+                url: '/change/downvid.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (msg) {
+                    console.log(msg);
+                    var file = document.getElementById('chooser');
+                    var $source = $('#downloadSrc');
+                    $source[0].src = "F:\output.mp4";
+                    $source.parent()[0].load();
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="panel">
+        <video id="mdaUpVid"
+            width="320"
+            height="240"
+            controls>
+            <source id="uploadSrc"> Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <div>
+        <input type="file"
+            id="chooser"
+            onchange="preview()">
+    </div>
+    <button id="btnUpload"
+        onclick="upload()">UPLOAD</button>
+    <div id="panel">
+        <video id="mdaDownVid"
+            width="320"
+            height="240"
+            controls>
+            <source id="downloadSrc">  Your browser does not support the video tag.
+        </video>
+    </div>
+    <button id="btnDownload"
+        onclick="download()">DOWNLOAD</button>
+    <div>
+
+    </div>
+</body>
+
+</html>

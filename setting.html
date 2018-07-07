@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible"
         content="IE=edge">
-    <title>Page Title</title>
+    <title>Cassanrda</title>
     <meta name="viewport"
         content="width=device-width, initial-scale=1">
     <!-- jQuery library -->
@@ -16,88 +16,146 @@
     <script src="main.js"></script>
     <script>
         var file_id;
+        var file;
+        var fileArray = new Array();
+
         function preview() {
-            input = document.getElementById('chooser');
+            input = $('#chooser');
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
 
                 reader.onload = function (e) {
-                    var video = document.getElementById('mdaUpVid');
-                    var source = document.createElement('source');
-
-                    source.setAttribute('src', e.target.result);
-                    source.setAttribute('type', 'video/mp4')
-
-                    video.appendChild(source);
-                    video.play();
+                    $('#img').attr('src', e.target.result);
                 }
 
                 reader.readAsDataURL(input.files[0]);
             }
+            console.log("done loading");
         }
         function upload() {
             var file = document.getElementById('chooser').files[0];
-            var formData = new FormData();
-            formData.append('file', file);
+            if (file) {
+                var formData = new FormData();
+                formData.append('file', file);
+                $.ajax({
+                    url: '/change/upload.php',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    type: "POST",
+                    success: function (msg) {
+                        console.log(msg);
+                        file_id = msg;
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var mes = '<img onload="setHandler(this)" width=300px height=180px src="' + e.target.result + '">';
+                            $('#olFiles').append('<li >' + mes + '</li>');
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            } else {
+                alert("None file");
+            }
+        }
+        function download() {
             $.ajax({
-                url: '/change/upload.php',
-                data: formData,
+                url: '/change/pull_request.php',
+                type: 'POST',
                 contentType: false,
                 processData: false,
-                type: "POST",
-                success: function (msg) {
-                    console.log(msg);
-                    file_id = msg;
+                success: function (data) {
+                    // $('#btnDownload').prop('disabled', true);
+                    var res = [];
+                    res = JSON.parse(data);
+                    for (i = 0; i < res.length; i++) {
+                        fileArray.push(res[i]['uuid']);
+                    }
+                    for (i = 0; i < fileArray.length; i++) {
+                        getFile(fileArray[i]);
+
+                        if (i === fileArray.length - 1) {
+                            
+                        }
+                    }
                 }
             });
         }
-        function download() {
+        function getFile(file) {
             var formData = new FormData();
-            formData.append('file_id', file_id);
+            formData.append('file_id', file);
+            var i = "download"
             $.ajax({
                 url: '/change/download.php',
                 type: 'POST',
                 data: formData,
                 contentType: false,
                 processData: false,
-                success: function (msg) {
-                    $('#imgLoad').attr('src', msg);
+                success: function (data) {
+                    var mes = '<img onload="setHandler(this)" width=300px height=180px src="' + data + '">';
+                    $('#olFiles').append('<li >' + mes + '</li>');
                 }
             });
         }
+        function setHandler(image) {
+            image.addEventListener('click', function () {
+                getDown(image);
+            },false);
+        }
+        function getDown(image) {
+            var filename = "Download";
+            var data = image.src;
+            var element = document.createElement('a');
+            element.setAttribute('href', data);
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+    </script>
+    <script>
     </script>
 </head>
 
 <body>
 
     <div id="panel">
-        <video id="mdaUpVid"
-            width="320"
-            height="240"
-            controls>
-            Your browser does not support the video tag.
-        </video>
+        <img id="img"
+            alt="Error"
+            width="600px"
+            height="300px">
+
+        <div>
+            <input id="chooser"
+                type="file"
+                onchange="preview()" />
+        </div>
+        <button id="btnUpload"
+            onclick="upload()">UPLOAD</button>
+        <div id="panel">
+            <img id="imgDisplay"
+                alt="Error"
+                width="600px"
+                height="300px">
+        </div>
+        <button id="btnDownload"
+            onclick="download()">DOWNLOAD</button>
     </div>
 
-    <div>
-        <input type="file"
-            id="chooser"
-            onchange="preview()">
-    </div>
-    <button id="btnUpload"
-        onclick="upload()">UPLOAD</button>
-    <div id="panel">
-        <video id="mdaUpVid"
-            width="320"
-            height="240"
-            controls> Your browser does not support the video tag.
-        </video>
-    </div>
-    <button id="btnDownload"
-        onclick="download()">DOWNLOAD</button>
-    <div>
+    <div class="right">
+        <ol id="olFiles">
 
+        </ol>
+        <input id="destination"
+            type="button"
+            style="display: none;"
+            onclick="destinate()">
     </div>
+
 </body>
 
 </html>
